@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Digital Wallet App</title>
+    <!-- Tailwind CSS CDN for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 1rem;
+        }
+        .container {
+            max-width: 500px;
+            width: 100%;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen flex items-center justify-center">
+
+    <div class="container bg-white shadow-xl rounded-2xl p-6 md:p-8 flex flex-col items-center">
+        <h1 class="text-3xl md:text-4xl font-extrabold text-indigo-700 text-center mb-6">
+            <i class="fas fa-wallet mr-2"></i>Digital Wallet
+        </h1>
+
+        <!-- User Information -->
+        <div class="w-full text-center p-6 bg-indigo-100 rounded-lg">
+            <h2 class="text-xl font-semibold text-indigo-800">My Wallet</h2>
+            <p id="dashboard-username" class="text-sm text-indigo-600 mt-1">Hello, User!</p>
+            <div class="mt-4">
+                <p class="text-lg text-gray-700">Current Balance:</p>
+                <p id="account-balance" class="text-4xl md:text-5xl font-extrabold text-indigo-800">$0.00</p>
+            </div>
+            <p id="user-id" class="text-xs text-gray-500 mt-2">Your ID: loading...</p>
+        </div>
+
+        <div class="w-full space-y-6 mt-6">
+            <!-- Send Money Form -->
+            <div class="bg-gray-50 p-6 rounded-lg shadow-md">
+                <h3 class="text-lg font-bold text-gray-700 mb-4">Send Money</h3>
+                <form id="send-form" class="space-y-4">
+                    <input type="text" id="recipient-id" placeholder="Recipient's User ID" required
+                           class="w-full p-3 rounded-lg border-2 border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    <input type="number" id="send-amount" placeholder="Amount to send" required
+                           class="w-full p-3 rounded-lg border-2 border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    <button type="submit"
+                            class="w-full bg-indigo-500 text-white font-bold py-3 rounded-lg hover:bg-indigo-600 transition-colors duration-300">
+                        Send
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Placeholder functions to simulate API calls to the Java back-end
+        const API_BASE_URL = "http://your-java-backend-api.com";
+
+        const showMessage = (text) => {
+            alert(text);
+        };
+
+        const updateBalance = (balance) => {
+            document.getElementById('account-balance').textContent = `$${balance.toFixed(2)}`;
+        };
+
+        const getBalanceFromApi = async (userId) => {
+            try {
+                const response = await fetch(`${API_BASE_URL}/balance/${userId}`);
+                const data = await response.json();
+                updateBalance(data.balance);
+            } catch (error) {
+                console.error("Failed to fetch balance:", error);
+                showMessage("Failed to load balance. Please try again.");
+            }
+        };
+
+        const handleSendMoney = async (event) => {
+            event.preventDefault();
+            const recipientId = document.getElementById('recipient-id').value;
+            const amount = parseFloat(document.getElementById('send-amount').value);
+
+            if (isNaN(amount) || amount <= 0) {
+                showMessage("Please enter a valid amount.");
+                return;
+            }
+
+            // In a real app, you would get the current user's ID from a session or token
+            const senderId = "user-123";
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/transfer`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ senderId, recipientId, amount })
+                });
+
+                if (response.ok) {
+                    showMessage("Money sent successfully!");
+                    // Refresh balance from the API
+                    getBalanceFromApi(senderId);
+                } else {
+                    const errorData = await response.json();
+                    showMessage(`Transaction failed: ${errorData.message}`);
+                }
+            } catch (error) {
+                console.error("Transfer failed:", error);
+                showMessage("An error occurred during the transfer.");
+            }
+        };
+
+        document.getElementById('send-form').addEventListener('submit', handleSendMoney);
+
+        // Simulate initial load
+        document.addEventListener('DOMContentLoaded', () => {
+            // In a real app, you would get the user ID from the login state
+            const currentUserId = "user-123";
+            document.getElementById('user-id').textContent = `Your ID: ${currentUserId}`;
+            getBalanceFromApi(currentUserId);
+        });
+    </script>
+</body>
+</html>
